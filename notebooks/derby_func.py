@@ -52,6 +52,30 @@ def race_rank():
     rank.append(RaceRank(13, 5, "新馬"))
     return rank
 
+def jockey_data_columns():
+    return [
+    "year",
+    "rank",
+    "1st",
+    "2nd",
+    "3rd",
+    "other",
+    "grand_cnt",
+    "grand_win",
+    "spetial_cnt",
+    "spetial_win",
+    "flat_cnt",
+    "flat_win",
+    "grass_cnt",
+    "grass_win",
+    "dart_cnt",
+    "dart_win",
+    "win_rate",
+    "2-1_rate",
+    "3-2-1_rate",
+    "reward",
+    "horse"]
+
 def race_data_columns():
     return [
     "rank",
@@ -65,6 +89,7 @@ def race_data_columns():
     "aptitude_ground",
     "age",
     "weight",
+    "jockey_id",
     "jockey",
     "time",
     "difference",
@@ -114,7 +139,7 @@ def horse_data_columns():
     "race_id"]
 
 def clear_all_str(df):
-    df = df.drop(columns = ["horse_name", "age", "horse_data_key", "odds", "popularity", "horse_number"], errors = 'ignore')
+    df = df.drop(columns = ["horse_name", "age", "horse_data_key", "odds", "popularity", "horse_number", "jockey_id"], errors = 'ignore')
     df['horse_weight_plus'] = df.apply(lambda x: x['horse_weight'].split('(')[1].strip(')'), axis = 1)
     df['horse_weight'] = df.apply(lambda x: x['horse_weight'].split('(')[0], axis = 1)
     df = df.drop(columns = ["horse_weight", 'horse_weight_plus'])
@@ -199,6 +224,11 @@ def get_old_race_info_from_text(header_flg, text, table_name, race_id, race_name
                             horse_id.append(tmp[:-1])
                             (name, scores) = get_horse_data(tmp[:-1], race_id, race_name)
                             horse_names.append(name)
+                        if 'jockey/result' in tmp :
+                            jockey_id = tmp[22:27]
+                            print(jockey_id)
+                            row_info.append(str(jockey_id))
+                            get_jockey_data(jockey_id)
                     tmp_text = tmp_text.replace("\n", "")
                     row_info.append(tmp_text.strip())
                     for score in scores:
@@ -208,6 +238,40 @@ def get_old_race_info_from_text(header_flg, text, table_name, race_id, race_name
     except:
         print("err")
         return None
+    
+def get_jockey_info_from_text(text, table_name):
+    try:
+        info = []
+        soup = bs4.BeautifulSoup(text, features='lxml')
+        base_elem = soup.find(class_=table_name)
+        elems = base_elem.find_all("tr")
+        for elem in elems:
+            race_id = ""
+            row_info = []
+            r_class = elem.get("class")
+            r_cols = None
+            r_cols = elem.find_all("td")
+            for r_col in r_cols:
+                if not r_col == None:
+                    row_info.append(r_col.text)
+            if not row_info == []:
+                info.append(row_info)
+        return info
+    except:
+        print("err")
+        return None
+
+def get_jockey_data(jockey_id):
+    URL_BASE = "https://db.netkeiba.com/jockey/result/"
+    TABLE_NAME = "nk_tb_common race_table_01"
+    url = URL_BASE + jockey_id
+    text = get_text_from_page(url)
+    info = get_jockey_info_from_text(text, TABLE_NAME)
+    if not info==None:
+        file_path = "csv/jockey/" + jockey_id + ".csv"
+        with open(file_path, "w", newline="", encoding='shift_jis') as f:
+            writer = csv.writer(f)
+            writer.writerows(info)
 
 def get_race_info_from_text(text, table_name, race_id, race_name):
     try:  
@@ -238,6 +302,11 @@ def get_race_info_from_text(text, table_name, race_id, race_name):
                                     horse_names.append(name)
                                     for score in scores:
                                         row_info.append(score[0])
+                                if 'jockey/result' in r_a :
+                                    jockey_id = r_a[45:50]
+                                    print(jockey_id)
+                                    row_info.append(str(jockey_id))
+                                    get_jockey_data(jockey_id)
             info.append(row_info)
         return (info, horse_id, horse_names)
     except:
