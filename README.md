@@ -11,6 +11,32 @@ DERBY
 - K Nearest Neighbor Classifier
 
 を使用.予測するのは「どの馬が1着になるか」ではなく「**その馬が馬券に絡むかどうか**」になります.
+三連単や単勝の予想への活用は想定していませんのでご注意ください
+
+訓練データとして下記パラメータを入力しています。
+- frame_number 	        枠番
+- aptitude_course 	    コース適性
+- aptitude_distance     距離適性
+- aptitude_run 	        脚質適性
+- aptitude_growth 	    成長適性
+- aptitude_ground 	    馬場適性
+- weight 	            斤量
+- race_count 	        レース数
+- jockey_rate 	        ジョッキーのその年の複勝率
+- past_rank_ave 	    過去レースの順位平均
+- before_race_rank 	    前走着順
+- past_rank_std 	    過去レースの順位標準偏差
+- med_race_score        後述の基準で定められたレーススコア * (4 - 順位) * 10) / 頭数 の中央値 (独断によって定めたため諸説)
+
+レーススコアは下記のように算出しています
+- 100, "G1"
+- 70, "G2"
+- 50, "G3"
+- 40, "L", "OP"
+- 30, "3勝", "1600万下"
+- 20, "2勝", "1000万下"
+- 10, "1勝", "500万下"
+- 5, "未勝利", "新馬"
 
 ## OverView
 ```
@@ -25,37 +51,41 @@ DERBY
 │   │       ├── 馬名.csv
 |   |       |     :
 │   │       └── 馬名.csv
-│   └── race
-│       ├── 2021レース名.csv
-│       ├── 2021レース名_spread.csv
-│       └── レース名
-│           ├── 2000.csv
-|           |     :
-│           └── 2020.csv
+│   ├── race
+│   │   ├── 2021レース名.csv
+│   │   ├── 2021レース名_spread.csv
+│   │   └── レース名
+│   │       ├── 2000.csv
+|   │       |     :
+│   │       └── 2020.csv
+│   └── jockey
+│       ├── jockey_id_1.csv
+│       └── jockey_id_2.csv
 ├── derby_func.py
 ├── 競馬予想用.xlsm
 ├── 競馬予想用.xlsx
 └── 競馬予想用_ロック.xlsx
 ```
-- 20Race_Learn.ipynb
-    - 学習に使用するソース
-- 20Race_Scraping.ipynb
-    - スクレイピングに使用するソース
-- DB_to_CSV.ipynb
-    - スプレッドシート用に変換するソース
-- Derby_All.ipynb
-    - スクレイピング + 学習（基本はこれを動かす）
-- csv/
-    - 馬のデータやレースデータの保管場所
-- derby_func.py
-    - 汎用ソース
 
 ## Requirement
 * Python 3.8
+    * requests
+    * bs4
+    * re
+    * os
+    * time
+    * numpy
+    * pandas
+    * matplotlib
+    * seaborn
+    * Enum
+    * collections
+    * sklearn
 
 ## Usage
-- クローンしてJupyter Notebookで開くだけ.
-- スクレイピングしてからじゃないと、もちろん学習側のソースは動きません.
+- Anaconda Navigater で、Requirement に記載したモジュールを導入済みの仮想環境を用意します。
+- Jupyter Notebook で、20Race_Scraping.ipynb を開き、スクレイピングを行います。
+- 20Race_Learn.ipynb で、学習および予想が行えます。
 
 ## Note
 20Race_Scrapingでは一回の実行で**過去20年分のレース×出走馬約18頭=400回近いアクセス**を行います.<br>

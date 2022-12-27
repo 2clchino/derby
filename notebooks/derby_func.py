@@ -29,6 +29,24 @@ def get_train_race_id(text, max_cnt = 21, min_cnt = 0):
         print("err")
         return None
 
+def get_pred_race_id(text):
+    try:
+        soup = bs4.BeautifulSoup(text, "html.parser")
+        base_elem = soup.findAll("div", class_="Top_RaceMenu_Inner")
+        pred_id = ""
+        for elem in base_elem:
+            cols = elem.findAll("a")
+            for col in cols:
+                link = col.get('href')
+                if ("race_id=" in link):
+                    tmp = link.split("race_id=")
+                    pred_id = tmp[1][:12]
+                    break
+        return pred_id
+    except:
+        print("err")
+        return None
+
 class RaceRank(object):
     def __init__(self, id, score, rank):
         self.id = id
@@ -62,8 +80,8 @@ def jockey_data_columns():
     "other",
     "grand_cnt",
     "grand_win",
-    "spetial_cnt",
-    "spetial_win",
+    "special_cnt",
+    "special_win",
     "flat_cnt",
     "flat_win",
     "grass_cnt",
@@ -226,7 +244,6 @@ def get_old_race_info_from_text(header_flg, text, table_name, race_id, race_name
                             horse_names.append(name)
                         if 'jockey/result' in tmp :
                             jockey_id = tmp[22:27]
-                            print(jockey_id)
                             row_info.append(str(jockey_id))
                             get_jockey_data(jockey_id)
                     tmp_text = tmp_text.replace("\n", "")
@@ -304,7 +321,6 @@ def get_race_info_from_text(text, table_name, race_id, race_name):
                                         row_info.append(score[0])
                                 if 'jockey/result' in r_a :
                                     jockey_id = r_a[45:50]
-                                    print(jockey_id)
                                     row_info.append(str(jockey_id))
                                     get_jockey_data(jockey_id)
             info.append(row_info)
